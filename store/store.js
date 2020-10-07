@@ -1,36 +1,42 @@
 import { createStore } from "vuex";
 import axios from "axios";
 
-import { baseURL, API } from "../src/baseUrl";
+import { baseURL, API } from "../baseUrl";
 
 export const store = createStore({
   state: {
     currentWeather: null,
     currentLocationWeather: null,
     loading: false,
+    forecastLoading: false,
     errors: null,
+    forecast: null,
   },
   getters: {
     getCurrentWeather: (state) => state.currentWeather,
     getCurrentLocationWeather: (state) => state.currentLocationWeather,
+    getForecast: (state) => state.forecast,
+    getForecastLoading: (state) => state.forecastLoading,
     getLoading: (state) => state.loading,
     getErrors: (state) => state.errors,
   },
   mutations: {
     setCurrentWeather: (state, data) => {
-      console.log(data);
       state.currentWeather = data;
-      console.log(state.currentWeather);
     },
     setCurrentLocationWeather: (state, data) => {
-      console.log(data);
       state.currentLocationWeather = data;
+    },
+    setForecast: (state, data) => {
+      state.forecast = data;
     },
     setLoading: (state, loading) => {
       state.loading = loading;
     },
+    setForecastLoading: (state, loading) => {
+      state.forecastLoading = loading;
+    },
     setErrors: (state, errors) => {
-      console.log(errors);
       state.errors = errors;
     },
   },
@@ -44,7 +50,6 @@ export const store = createStore({
         commit("setCurrentWeather", res.data);
       } catch (error) {
         commit("setLoading", false);
-        console.log(error.response);
         commit("setErrors", error.response.data.message);
       }
     },
@@ -56,7 +61,22 @@ export const store = createStore({
         );
         commit("setCurrentLocationWeather", res.data);
       } catch (error) {
-        console.log(error.response);
+        commit("setErrors", error.response.data.message);
+      }
+    },
+    getForecast: async ({ commit }, location) => {
+      commit("setErrors", null);
+      commit("setForecastLoading", true);
+      const forecast = "https://api.openweathermap.org/data/2.5/forecast";
+      try {
+        const res = await axios.get(
+          `${forecast}?q=${location}&cnt=16&appid=${API}`
+        );
+        commit("setForecastLoading", false);
+        commit("setForecast", res.data);
+      } catch (error) {
+        commit("setForecastLoading", false);
+        commit("setErrors", error.response.data.message);
       }
     },
   },
